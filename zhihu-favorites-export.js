@@ -598,6 +598,13 @@
             '<div class="section-divider"></div>' +
             '<div>' +
             '<label>选择要导出的内容:</label>' +
+            '<div>' +
+    '<label>分段导出序号 (从 1 开始):</label>' +
+    '<div style="display: flex; gap: 5px; margin-bottom: 10px;">' +
+        '<input type="number" id="export-from" placeholder="起" style="margin-bottom:0; flex:1;" />' +
+        '<input type="number" id="export-to" placeholder="止" style="margin-bottom:0; flex:1;" />' +
+    '</div>' +
+'</div>' +
             '<div id="collections-list"></div>' +
             '<div class="button-group">' +
             '<button id="select-all" class="btn-secondary">' +
@@ -1115,20 +1122,29 @@
     }
 
     // 导出选中内容
-    function exportSelected() {
-        const selectedCollections = collections.filter(c => c.selected);
+function exportSelected() {
+    let selectedCollections = collections.filter(c => c.selected);
+    
+    // 获取用户输入的起止序号
+    const fromIdx = parseInt(document.getElementById('export-from').value);
+    const toIdx = parseInt(document.getElementById('export-to').value);
 
-        if (selectedCollections.length === 0) {
-            updateStatus('请先选择要导出的内容');
-            return;
-        }
-
-        updateStatus('开始导出 ' + selectedCollections.length + ' 个项目...');
-        updateProgressBar(0);
-
-        // 逐个导出
-        exportCollectionsSequentially(selectedCollections, 0);
+    // 如果填了序号，则进行截取（注意：用户习惯从1开始计数）
+    if (!isNaN(fromIdx) && !isNaN(toIdx)) {
+        updateStatus(`正在准备导出第 ${fromIdx} 到 ${toIdx} 项...`);
+        selectedCollections = selectedCollections.slice(fromIdx - 1, toIdx);
     }
+
+    if (selectedCollections.length === 0) {
+        updateStatus('当前范围内没有可导出的项目');
+        return;
+    }
+
+    updateStatus('开始导出 ' + selectedCollections.length + ' 个项目...');
+    updateProgressBar(0);
+    // 逐个导出
+    exportCollectionsSequentially(selectedCollections, 0);
+}
 
     // 顺序导出收藏夹
     function exportCollectionsSequentially(collections, index) {
